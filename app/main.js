@@ -29,6 +29,9 @@
         /* DIR_BOTTOM --> */ [ 0, +1],
     ];
 
+    // Animation speed (delay between each frames (0 is the normal frame rate))
+    const ANIMATION_SPEED = [0, 50, 100, 150, 200, 250, 500, 750, 1000];
+
     class Node {
 
         constructor(x, y) {
@@ -109,10 +112,13 @@
     let nbExtraPaths = 0;
     let startingNode = null;
     let endingNode = null;
+    let newestNode = null; // Used for the coloration when generating the maze
     let currentProgress = 0;
     let isAsyncMode = false;
     let animFrameId = 0;
     let promiseReject = null;
+
+    let animationSpeed = 0;
 
     // HTML elements
 
@@ -128,6 +134,8 @@
     const inputPathsDensity = document.getElementById('input-paths-density');
     const inputPreviewType = document.getElementById('input-preview-type');
 
+    const inputGenerationSpeed = document.getElementById('input-generation-speed');
+
     // Events
 
     window.addEventListener('resize', resize);
@@ -136,6 +144,9 @@
     inputInnerRadius.addEventListener('input', generateMaze);
     inputPathsDensity.addEventListener('input', generateMaze);
     inputPreviewType.addEventListener('input', generateMaze);
+
+    inputGenerationSpeed.addEventListener('input', function(){animationSpeed = ANIMATION_SPEED[this.value];});
+
 
     // Functions
 
@@ -150,6 +161,7 @@
 
         startingNode = null;
         endingNode = null;
+        newestNode = null;
 
         radius = +inputRadius.value;
         innerRadius = radius * (inputInnerRadius.value / 100) | 0;
@@ -215,12 +227,16 @@
             node.addEdge(dir, newNode);
             history.push(newNode);
 
+            newestNode = newNode;
+
             redrawIfNeeded();
 
             await waitNextFrame();
         }
 
         await addRandomExtraPaths(nbExtraPaths);
+
+        newestNode = null;
 
         startingNode = getNodeAt(startingX, startingY);
         endingNode = getNodeAt(endingX, endingY);
@@ -260,6 +276,7 @@
 
         const totalProgress = shortestPath.length - 1;
 
+        // Variables for "V1" Speed
         const start = Date.now();
         let duration = start;
 
@@ -270,9 +287,14 @@
                 break;
             }
 
-            duration = Date.now() - start;
+            if (false) { // V1 : Based on the real time (constant speed even frame frizz)
+                duration = Date.now() - start;
+                currentProgress = duration / 100;
+            }
+            else { // V2 : Based with the "sleep" promise in the "waitNextFrame" function
+                currentProgress++;
+            }
 
-            currentProgress = duration / 100;
             redrawIfNeeded();
 
             await waitNextFrame();
@@ -356,6 +378,8 @@
 
         ctx.fillStyle = COLOR_PATH;
 
+
+
         for (let dir = 0; dir < 2; dir++) {
 
             if (!node.nighs[dir]) {
@@ -374,6 +398,9 @@
             ctx.fillStyle = COLOR_START;
         } else if (node === endingNode) {
             ctx.fillStyle = COLOR_END;
+        }       else if (node == newestNode)
+        {
+            ctx.fillStyle = '#F00';
         }
 
         ctx.fillRect(pxX - marginX, pxY - marginY, nodeSize + 2*marginX, nodeSize + 2*marginY);
@@ -443,6 +470,7 @@
 
                 if (target && !node.isLinkedTo(target)) {
                     node.addEdge(dir, target);
+                    newestNode = node;
                     nbExtraPaths--;
                     redrawIfNeeded();
                     await waitNextFrame();
@@ -533,11 +561,16 @@
         return array[Math.random() * array.length | 0];
     }
 
-
+    
     // Return a promise which is resolved the next frame (async mode only)
     async function waitNextFrame() {
-        
         if (isAsyncMode) {
+            
+            await new Promise((resolve, reject) => {
+                promiseReject = reject;
+                setTimeout(resolve, animationSpeed);
+            });
+
             return new Promise((resolve, reject) => {
                 promiseReject = reject;
                 animFrameId = requestAnimationFrame(resolve);

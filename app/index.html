@@ -28,6 +28,12 @@
                 <option value="instant">Instant</option>
             </select>
         </div>
+
+        <div class="input-row">
+            <label for="input-generation-speed">Generation speed</label>
+            <!-- max = JS const ANIMATION_SPEED lenght -->
+            <input id="input-generation-speed" type="range" value="0" min="0" max="8">
+        </div>
     </div>
     <div id="maze-wrapper">
         <canvas id="maze"></canvas>
