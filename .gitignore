@@ -1,0 +1,8 @@
+# Files
+*.log
+*.backup
+*.code-workspace
+~*
+
+# Folders
+.vscode/

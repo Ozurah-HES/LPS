@@ -1,6 +1,12 @@
 (function () {
     'use strict';
 
+    // Colors
+    const COLOR_PATH = '#CCC';
+    const COLOR_START = '#51AAF5';
+    const COLOR_END = '#A5F74D';
+    const COLOR_RESOLVED_PATH = 'crimson';
+
     // Directions
     const DIR_TOP    = 0;
     const DIR_LEFT   = 1;
@@ -141,6 +147,9 @@
         animFrameId = 0;
         if (promiseReject) promiseReject();
         promiseReject = null;
+
+        startingNode = null;
+        endingNode = null;
 
         radius = +inputRadius.value;
         innerRadius = radius * (inputInnerRadius.value / 100) | 0;
@@ -295,7 +304,6 @@
 
     // Redraw the canvas if the async mode is set to true
     function redrawIfNeeded() {
-
         if (isAsyncMode) {
             redraw();
         }
@@ -307,6 +315,8 @@
 
         ctx.clearRect(0, 0, canvas.width, canvas.height);
 
+        // Draw labyrinth path
+        // -  Path
         for (let y = 0; y < diameter; y++) {
             for (let x = 0; x < diameter; x++) {
                 
@@ -314,37 +324,65 @@
 
                 if (!node) continue;
 
-                const [pxX, pxY] = nodeCoordToPxCoordTopLeft(x, y);
-
-                let marginX = 0;
-                let marginY = 0;
-
                 if (node === startingNode || node === endingNode) {
-                    marginX = nodeSize / 2 | 0;
-                    marginY = nodeSize / 2 | 0;
+                    // for drawing start and end after the path (better visual)
+                    continue;
                 }
 
-                ctx.fillStyle = '#CCC';
-
-                ctx.fillRect(pxX - marginX, pxY - marginY, nodeSize + 2*marginX, nodeSize + 2*marginY);
-
-                for (let dir = 0; dir < 2; dir++) {
-
-                    if (!node.nighs[dir]) {
-                        continue;
-                    }
-
-                    const [relX, relY] = DIR_TO_RELATIVE_COORD_LOOKUP[dir];
-
-                    const targetPxX = pxX + relX * nodeSize;
-                    const targetPxY = pxY + relY * nodeSize;
-                    
-                    ctx.fillRect(targetPxX, targetPxY, nodeSize, nodeSize);
-                }
+                drawNode(node)
             }
         }
 
-        ctx.strokeStyle = 'crimson';
+        // - Start and end
+        if (startingNode)  drawNode(startingNode);
+        if (endingNode)    drawNode(endingNode);
+
+        // Draw the path resolution
+        drawPath();
+    }
+
+    // Draw a node (with his path to the next node) at the correct coordinates in the canvas
+    function drawNode(node)
+    {
+        const [pxX, pxY] = nodeCoordToPxCoordTopLeft(node.x, node.y);
+
+        let marginX = 0;
+        let marginY = 0;
+
+        if (node === startingNode || node === endingNode) {
+            marginX = nodeSize / 2 | 0;
+            marginY = nodeSize / 2 | 0;
+        }
+
+        ctx.fillStyle = COLOR_PATH;
+
+        for (let dir = 0; dir < 2; dir++) {
+
+            if (!node.nighs[dir]) {
+                continue;
+            }
+
+            const [relX, relY] = DIR_TO_RELATIVE_COORD_LOOKUP[dir];
+
+            const targetPxX = pxX + relX * nodeSize;
+            const targetPxY = pxY + relY * nodeSize;
+            
+            ctx.fillRect(targetPxX, targetPxY, nodeSize, nodeSize);
+        }
+
+        if (node === startingNode) {
+            ctx.fillStyle = COLOR_START;
+        } else if (node === endingNode) {
+            ctx.fillStyle = COLOR_END;
+        }
+
+        ctx.fillRect(pxX - marginX, pxY - marginY, nodeSize + 2*marginX, nodeSize + 2*marginY);
+    }
+
+    // Draw the shortest path in the maze
+    function drawPath()
+    {
+        ctx.strokeStyle = COLOR_RESOLVED_PATH;
         ctx.lineWidth = nodeSize;
 
         let i = 0;
