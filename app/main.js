@@ -112,13 +112,16 @@
     let nbExtraPaths = 0;
     let startingNode = null;
     let endingNode = null;
-    let newestNode = null; // Used for the coloration when generating the maze
-    let currentProgress = 0;
-    let isAsyncMode = false;
-    let animFrameId = 0;
+    
     let promiseReject = null;
 
-    let animationSpeed = 0;
+    // - For animation
+    let isAsyncMode = false;
+    let animFrameId = 0;
+    let generationAnimationSpeed = 0;
+    let resolveAnimationSpeed = 0;
+    let newestNode = null; // Used for the coloration when generating the maze
+    let currentProgress = 0;
 
     // HTML elements
 
@@ -135,6 +138,7 @@
     const inputPreviewType = document.getElementById('input-preview-type');
 
     const inputGenerationSpeed = document.getElementById('input-generation-speed');
+    const inputResolveSpeed = document.getElementById('input-resolve-speed');
 
     // Events
 
@@ -145,7 +149,14 @@
     inputPathsDensity.addEventListener('input', generateMaze);
     inputPreviewType.addEventListener('input', generateMaze);
 
-    inputGenerationSpeed.addEventListener('input', function(){animationSpeed = ANIMATION_SPEED[this.value];});
+    inputGenerationSpeed.addEventListener('input', function(){generationAnimationSpeed = ANIMATION_SPEED[this.value];});
+    inputResolveSpeed.addEventListener('input', function(){
+        resolveAnimationSpeed = ANIMATION_SPEED[this.value];
+    });
+
+    // Default value (not radius or other, because they called the generation instead of directly setted values)
+    generationAnimationSpeed = ANIMATION_SPEED[inputGenerationSpeed.value];
+    resolveAnimationSpeed = ANIMATION_SPEED[inputResolveSpeed.value];
 
 
     // Functions
@@ -231,7 +242,7 @@
 
             redrawIfNeeded();
 
-            await waitNextFrame();
+            await waitNextFrame(generationAnimationSpeed);
         }
 
         await addRandomExtraPaths(nbExtraPaths);
@@ -273,12 +284,11 @@
 
     // Update the visual progress corresponding to the shortest path to take
     async function updateVisualProgress() {
-
+        currentProgress = 0;
         const totalProgress = shortestPath.length - 1;
 
-        // Variables for "V1" Speed
-        const start = Date.now();
-        let duration = start;
+        let previousDrawTime = Date.now();
+        let duration = previousDrawTime;
 
         do {
 
@@ -287,13 +297,14 @@
                 break;
             }
 
-            if (false) { // V1 : Based on the real time (constant speed even frame frizz)
-                duration = Date.now() - start;
-                currentProgress = duration / 100;
-            }
-            else { // V2 : Based with the "sleep" promise in the "waitNextFrame" function
-                currentProgress++;
-            }
+
+            duration = Date.now() - previousDrawTime;
+        
+            // ++ to avoid division by 0
+            if (resolveAnimationSpeed == 0) resolveAnimationSpeed++;
+
+            currentProgress += duration / resolveAnimationSpeed;
+            previousDrawTime = Date.now();
 
             redrawIfNeeded();
 
@@ -473,7 +484,7 @@
                     newestNode = node;
                     nbExtraPaths--;
                     redrawIfNeeded();
-                    await waitNextFrame();
+                    await waitNextFrame(generationAnimationSpeed);
                 }
             }
         }
@@ -563,7 +574,7 @@
 
     
     // Return a promise which is resolved the next frame (async mode only)
-    async function waitNextFrame() {
+    async function waitNextFrame(animationSpeed = 0) {
         if (isAsyncMode) {
             
             await new Promise((resolve, reject) => {
