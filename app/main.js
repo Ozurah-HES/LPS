@@ -6,6 +6,7 @@
     const COLOR_START = '#51AAF5';
     const COLOR_END = '#A5F74D';
     const COLOR_RESOLVED_PATH = 'crimson';
+    const COLOR_CURRENT_PROGRESS = "#A14DF7"
 
     // Directions
     const DIR_TOP    = 0;
@@ -120,7 +121,7 @@
     let animFrameId = 0;
     let generationAnimationSpeed = 0;
     let resolveAnimationSpeed = 0;
-    let newestNode = null; // Used for the coloration when generating the maze
+    let currentAnimationNode = null; // Used for the coloration when generating the maze
     let currentProgress = 0;
 
     // HTML elements
@@ -172,7 +173,7 @@
 
         startingNode = null;
         endingNode = null;
-        newestNode = null;
+        currentAnimationNode = null;
 
         radius = +inputRadius.value;
         innerRadius = radius * (inputInnerRadius.value / 100) | 0;
@@ -226,6 +227,12 @@
                 }
             }
 
+
+            currentAnimationNode = node;
+            redrawIfNeeded();
+            await waitNextFrame(generationAnimationSpeed);
+            
+            
             if (freeSpacesCoord.length === 0) {
 
                 history.pop();
@@ -238,16 +245,14 @@
             node.addEdge(dir, newNode);
             history.push(newNode);
 
-            newestNode = newNode;
-
+            currentAnimationNode = newNode;
             redrawIfNeeded();
-
-            await waitNextFrame(generationAnimationSpeed);
+            await waitNextFrame();
         }
 
         await addRandomExtraPaths(nbExtraPaths);
 
-        newestNode = null;
+        currentAnimationNode = null;
 
         startingNode = getNodeAt(startingX, startingY);
         endingNode = getNodeAt(endingX, endingY);
@@ -307,7 +312,6 @@
             previousDrawTime = Date.now();
 
             redrawIfNeeded();
-
             await waitNextFrame();
 
         } while (currentProgress < totalProgress);
@@ -409,9 +413,8 @@
             ctx.fillStyle = COLOR_START;
         } else if (node === endingNode) {
             ctx.fillStyle = COLOR_END;
-        }       else if (node == newestNode)
-        {
-            ctx.fillStyle = '#F00';
+        } else if (node == currentAnimationNode && generationAnimationSpeed > 0) { // Checking anim. speed to avoid useless flickering
+            ctx.fillStyle = COLOR_CURRENT_PROGRESS;
         }
 
         ctx.fillRect(pxX - marginX, pxY - marginY, nodeSize + 2*marginX, nodeSize + 2*marginY);
@@ -481,8 +484,9 @@
 
                 if (target && !node.isLinkedTo(target)) {
                     node.addEdge(dir, target);
-                    newestNode = node;
+                    currentAnimationNode = node;
                     nbExtraPaths--;
+
                     redrawIfNeeded();
                     await waitNextFrame(generationAnimationSpeed);
                 }
