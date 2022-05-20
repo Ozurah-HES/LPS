@@ -133,21 +133,32 @@
 
     // HTML inputs
 
+    // - Generation
     const inputRadius = document.getElementById('input-radius');
     const inputInnerRadius = document.getElementById('input-inner-radius');
     const inputPathsDensity = document.getElementById('input-paths-density');
-    const inputPreviewType = document.getElementById('input-preview-type');
 
+    // - Animation
+    const inputPreviewType = document.getElementById('input-preview-type');
     const inputGenerationSpeed = document.getElementById('input-generation-speed');
     const inputResolveSpeed = document.getElementById('input-resolve-speed');
+
+    // - Export
+    const link = document.getElementById('link');
+    const exportUnresolvedToPng = document.getElementById('export-unresolved-png');
+    const exportResolvedToPng = document.getElementById('export-resolved-png');
+    const exportUnfinishedToPng = document.getElementById('export-unfinished-png');
 
     // Events
 
     window.addEventListener('resize', resize);
 
+    // - Generation
     inputRadius.addEventListener('input', generateMaze);
     inputInnerRadius.addEventListener('input', generateMaze);
     inputPathsDensity.addEventListener('input', generateMaze);
+
+    // - Animation
     inputPreviewType.addEventListener('input', generateMaze);
 
     inputGenerationSpeed.addEventListener('input', function(){generationAnimationSpeed = ANIMATION_SPEED[this.value];});
@@ -155,7 +166,23 @@
         resolveAnimationSpeed = ANIMATION_SPEED[this.value];
     });
 
-    // Default value (not radius or other, because they called the generation instead of directly setted values)
+    // - Export
+    exportUnresolvedToPng.addEventListener('click', function(){
+        redraw(false);
+        saveCanvasToPng('LPS-Unresolved.png');
+        redraw();
+    });
+
+    exportResolvedToPng.addEventListener('click', function(){
+        saveCanvasToPng('LPS-Resolved.png');
+    });
+
+    exportUnfinishedToPng.addEventListener('click', function(){
+        saveCanvasToPng('LPS-Unfinished.png');
+    });
+
+    // Default value 
+    // (not radius or other, because they called the generation instead of directly setted values)
     generationAnimationSpeed = ANIMATION_SPEED[inputGenerationSpeed.value];
     resolveAnimationSpeed = ANIMATION_SPEED[inputResolveSpeed.value];
 
@@ -163,8 +190,10 @@
     // Functions
 
     generateMaze();
-    // Generate the full maze
+    // Generate the full maze (with animation)
     async function generateMaze() {
+
+        onGenerationStart();
 
         cancelAnimationFrame(animFrameId);
         animFrameId = 0;
@@ -258,8 +287,8 @@
         endingNode = getNodeAt(endingX, endingY);
 
         redrawIfNeeded();
-        
-        resolveMaze();
+
+        onGenerationEnd();
     }
 
 
@@ -283,7 +312,7 @@
             if (node) node.resetState();
         }
 
-        updateVisualProgress();
+        onResolveEnd();
     }
 
 
@@ -317,6 +346,8 @@
         } while (currentProgress < totalProgress);
 
         redraw();
+
+        onResolveAnimationEnd();
     }
 
 
@@ -348,7 +379,7 @@
 
 
     // Redraw the whole canvas
-    function redraw() {
+    function redraw(withResolvedPath = true) {
 
         ctx.clearRect(0, 0, canvas.width, canvas.height);
 
@@ -375,7 +406,9 @@
         if (endingNode)    drawNode(endingNode);
 
         // Draw the path resolution
-        drawPath();
+        if (withResolvedPath){
+            drawPath();
+        }
     }
 
     // Draw a node (with his path to the next node) at the correct coordinates in the canvas
@@ -593,5 +626,46 @@
         }
 
         return Promise.resolve();
+    }
+
+    async function saveCanvasToPng(name = 'LPS-maze.png')
+    {
+        link.download = name;
+        link.href = canvas.toDataURL();
+        link.click();
+    }
+
+    // Display the export buttons according if the maze animation is finished or not
+    function exportButtonVisibility(isGenerationFinished) {
+
+        const finishedElements = document.querySelectorAll(".export-finished");
+        const unfinishedElements = document.querySelectorAll(".export-unfinished");
+
+        if (isGenerationFinished) {
+            finishedElements.forEach(e => e.classList.remove("hidden"));
+            unfinishedElements.forEach(e => e.classList.add("hidden"));
+        } else {
+            finishedElements.forEach(e => e.classList.add("hidden"));
+            unfinishedElements.forEach(e => e.classList.remove("hidden"));
+        }
+    }
+
+    function onGenerationStart() {
+        exportButtonVisibility(false);
+    }
+
+    function onGenerationEnd()
+    {
+        resolveMaze();
+    }
+
+    function onResolveEnd()
+    {
+        updateVisualProgress();
+    }
+
+    function onResolveAnimationEnd()
+    {
+        exportButtonVisibility(true);
     }
 })();

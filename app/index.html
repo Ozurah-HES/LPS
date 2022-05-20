@@ -1,14 +1,20 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LPS</title>
+    <title>LPS - Labyrinth Path Solver</title>
+    <link rel="icon" type="image/x-icon" href="../misc/logo.png">
     <link rel="stylesheet" href="style.css">
 </head>
+
 <body>
     <div id="ui-wrapper">
         <h1>Labyrinth Path Solver</h1>
+        <div class="input-header">
+            <label>Generation configuration</label>
+        </div>
         <div class="input-row">
             <label for="input-radius">Outer radius</label>
             <input id="input-radius" type="range" value="20" min="5" max="50">
@@ -21,6 +27,11 @@
             <label for="input-paths-density">Paths density</label>
             <input id="input-paths-density" type="range" value="2" min="0" max="50">
         </div>
+
+        <div class="input-header">
+            <label>Animation configuration</label>
+        </div>
+
         <div class="input-row">
             <label for="input-preview-type">Preview type</label>
             <select id="input-preview-type">
@@ -39,10 +50,28 @@
             <!-- max = JS const ANIMATION_SPEED lenght (removing the index 0 to exclude "instant resolve") -->
             <input id="input-resolve-speed" type="range" value="2" min="1" max="8">
         </div>
+
+        <!-- Export -->
+        <!-- Link used for download https://stackoverflow.com/questions/10673122/how-to-save-canvas-as-an-image-with-canvas-todataurl -->
+        <a id="link"></a>
+
+        <div class="input-header">
+            <label>Export</label>
+        </div>
+        <div class="input-row export-finished">
+            <button id="export-unresolved-png">Export unresolved labyrinth to PNG</button>
+        </div>
+        <div class="input-row export-finished">
+            <button id="export-resolved-png">Export resolved labyrinth to PNG</button>
+        </div>
+        <div class="input-row export-unfinished">
+            <button id="export-unfinished-png">Export current state of the labyrinth to PNG</button>
+        </div>
     </div>
     <div id="maze-wrapper">
         <canvas id="maze"></canvas>
     </div>
     <script src="main.js"></script>
 </body>
+
 </html>
