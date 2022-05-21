@@ -168,9 +168,14 @@
 
     // - Export
     exportUnresolvedToPng.addEventListener('click', function(){
+        // Redraw the maze without the resolved path
         redraw(false);
+
+        // Export the canvas to a PNG
         saveCanvasToPng('LPS-Unresolved.png');
-        redraw();
+
+        // Redraw like it was before
+        redraw(); // To avoid flicker
     });
 
     exportResolvedToPng.addEventListener('click', function(){
@@ -194,11 +199,6 @@
     async function generateMaze() {
 
         onGenerationStart();
-
-        cancelAnimationFrame(animFrameId);
-        animFrameId = 0;
-        if (promiseReject) promiseReject();
-        promiseReject = null;
 
         startingNode = null;
         endingNode = null;
@@ -286,8 +286,6 @@
         startingNode = getNodeAt(startingX, startingY);
         endingNode = getNodeAt(endingX, endingY);
 
-        redrawIfNeeded();
-
         onGenerationEnd();
     }
 
@@ -325,7 +323,6 @@
         let duration = previousDrawTime;
 
         do {
-
             if (!isAsyncMode) {
                 currentProgress = totalProgress;
                 break;
@@ -338,11 +335,12 @@
             if (resolveAnimationSpeed == 0) resolveAnimationSpeed++;
 
             currentProgress += duration / resolveAnimationSpeed;
+
             previousDrawTime = Date.now();
 
             redrawIfNeeded();
             await waitNextFrame();
-
+            
         } while (currentProgress < totalProgress);
 
         redraw();
@@ -636,36 +634,50 @@
     }
 
     // Display the export buttons according if the maze animation is finished or not
-    function exportButtonVisibility(isGenerationFinished) {
+    function exportButtonVisibility(isGenerationFinished, isResolveFinished) {
 
-        const finishedElements = document.querySelectorAll(".export-finished");
+        const generationFinishedElements = document.querySelectorAll(".export-generation-finished");
+        const resolveFinishedElements = document.querySelectorAll(".export-resolve-finished");
         const unfinishedElements = document.querySelectorAll(".export-unfinished");
 
         if (isGenerationFinished) {
-            finishedElements.forEach(e => e.classList.remove("hidden"));
+            generationFinishedElements.forEach(e => e.classList.remove("hidden"));
             unfinishedElements.forEach(e => e.classList.add("hidden"));
         } else {
-            finishedElements.forEach(e => e.classList.add("hidden"));
+            generationFinishedElements.forEach(e => e.classList.add("hidden"));
             unfinishedElements.forEach(e => e.classList.remove("hidden"));
+        }
+
+        if (isResolveFinished) {
+            resolveFinishedElements.forEach(e => e.classList.remove("hidden"));
+        } else {
+            resolveFinishedElements.forEach(e => e.classList.add("hidden"));
         }
     }
 
     function onGenerationStart() {
-        exportButtonVisibility(false);
+        exportButtonVisibility(false, false);
+
+        cancelAnimationFrame(animFrameId);
+        animFrameId = 0;
+        if (promiseReject) promiseReject();
+        promiseReject = null;
     }
 
     function onGenerationEnd()
     {
+        redrawIfNeeded();
         resolveMaze();
     }
 
     function onResolveEnd()
     {
+        exportButtonVisibility(true, false);
         updateVisualProgress();
     }
 
     function onResolveAnimationEnd()
     {
-        exportButtonVisibility(true);
+        exportButtonVisibility(true, true);
     }
 })();
