@@ -48,7 +48,6 @@
         addEdge(dir, target) {
 
             const oppositeDir = DIR_TO_OPPOSITE_DIR_LOOKUP[dir];
-
             this.nighs[dir] = target;
             target.nighs[oppositeDir] = this;
         }
@@ -535,30 +534,36 @@
 
     // Add the specified number of extra paths (extra connections) to the maze
     async function addRandomExtraPaths(nbExtraPaths) {
+        let allNodes = maze.filter(node => node !== null && node.nighs.some(nigh => nigh === null));
 
-        const allNodes = maze.filter(node => node !== null);
 
         while (nbExtraPaths > 0) {
 
             const node = getRandomValue(allNodes);
 
-            for (let dir = 0; dir < 4; dir++) {
+            // get a possible direction for this node
+            const possibleDir = getAllIndexes(node.nighs, null);
+            let dir = getRandomValue(possibleDir);
 
-                const [relX, relY] = DIR_TO_RELATIVE_COORD_LOOKUP[dir];
+            const [relX, relY] = DIR_TO_RELATIVE_COORD_LOOKUP[dir];
 
-                const targetX = node.x + relX;
-                const targetY = node.y + relY;
+            const targetX = node.x + relX;
+            const targetY = node.y + relY;
 
-                const target = getNodeAt(targetX, targetY);
+            const target = getNodeAt(targetX, targetY);
 
-                if (target && !node.isLinkedTo(target)) {
-                    node.addEdge(dir, target);
-                    currentAnimationNode = node;
-                    nbExtraPaths--;
+            // Target can be null if the it is outside the maze
+            if (target && !node.isLinkedTo(target)) {
+                node.addEdge(dir, target);
 
-                    redrawIfNeeded();
-                    await waitNextFrame(generationAnimationSpeed);
-                }
+                // To avoid infinity loop, we update the list without the node which have all nighs connected
+                allNodes = maze.filter(node => node !== null && node.nighs.some(nigh => nigh === null));
+
+                currentAnimationNode = node;
+                nbExtraPaths--;
+
+                redrawIfNeeded();
+                await waitNextFrame(generationAnimationSpeed);
             }
         }
     }
@@ -645,6 +650,15 @@
         return array[Math.random() * array.length | 0];
     }
 
+    // Get each index where the value is found in the array
+    // Source :https://stackoverflow.com/questions/20798477/how-to-find-index-of-all-occurrences-of-element-in-array 
+    function getAllIndexes(array, value) {
+        let indexes = [], i = -1;
+        while ((i = array.indexOf(value, i+1)) != -1){
+            indexes.push(i);
+        }
+        return indexes;
+    }
 
     // Return a promise which is resolved the next frame (async mode only)
     async function waitNextFrame(animationSpeed = 0) {
