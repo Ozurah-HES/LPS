@@ -36,7 +36,7 @@
     class Node {
 
         constructor(x, y) {
-            
+
             this.x = x;
             this.y = y;
             this.nighs = [null, null, null, null];
@@ -46,7 +46,7 @@
 
         // Link to nodes together
         addEdge(dir, target) {
-            
+
             const oppositeDir = DIR_TO_OPPOSITE_DIR_LOOKUP[dir];
 
             this.nighs[dir] = target;
@@ -113,7 +113,9 @@
     let nbExtraPaths = 0;
     let startingNode = null;
     let endingNode = null;
-    
+
+    let mazeResolved = false;
+
     let promiseReject = null;
 
     // - For animation
@@ -123,6 +125,10 @@
     let resolveAnimationSpeed = 0;
     let currentAnimationNode = null; // Used for the coloration when generating the maze
     let currentProgress = 0;
+    let showSolution = false;
+
+    // - For export
+    let mazeId = 1;
 
     // HTML elements
 
@@ -137,8 +143,10 @@
     const inputRadius = document.getElementById('input-radius');
     const inputInnerRadius = document.getElementById('input-inner-radius');
     const inputPathsDensity = document.getElementById('input-paths-density');
+    const buttonRegenerate = document.getElementById('button-regenerate');
 
     // - Animation
+    const inputShowSolution = document.getElementById('input-show-solution');
     const inputPreviewType = document.getElementById('input-preview-type');
     const inputGenerationSpeed = document.getElementById('input-generation-speed');
     const inputResolveSpeed = document.getElementById('input-resolve-speed');
@@ -157,37 +165,63 @@
     inputRadius.addEventListener('input', generateMaze);
     inputInnerRadius.addEventListener('input', generateMaze);
     inputPathsDensity.addEventListener('input', generateMaze);
+    buttonRegenerate.addEventListener('click', generateMaze);
 
     // - Animation
-    inputPreviewType.addEventListener('input', generateMaze);
+    inputShowSolution.addEventListener('change', function () {
+        showSolution = this.checked;
+        if (!showSolution) currentProgress = 0;
+        showSolutionAnimationIfNeeded();
+    });
 
-    inputGenerationSpeed.addEventListener('input', function(){generationAnimationSpeed = ANIMATION_SPEED[this.value];});
-    inputResolveSpeed.addEventListener('input', function(){
+    inputPreviewType.addEventListener('input', function () {
+        isAsyncMode = (inputPreviewType.value === 'show-progress');
+    });
+
+    inputGenerationSpeed.addEventListener('input', function () { generationAnimationSpeed = ANIMATION_SPEED[this.value]; });
+    inputResolveSpeed.addEventListener('input', function () {
         resolveAnimationSpeed = ANIMATION_SPEED[this.value];
     });
 
     // - Export
-    exportUnresolvedToPng.addEventListener('click', function(){
+    exportUnresolvedToPng.addEventListener('click', function () {
         // Redraw the maze without the resolved path
         redraw(false);
 
         // Export the canvas to a PNG
-        saveCanvasToPng('LPS-Unresolved.png');
+        saveCanvasToPng(`LPS-${mazeId}-Unresolved.png`);
 
         // Redraw like it was before
         redraw(); // To avoid flicker
     });
 
-    exportResolvedToPng.addEventListener('click', function(){
-        saveCanvasToPng('LPS-Resolved.png');
+    exportResolvedToPng.addEventListener('click', function () {
+
+        // Save resolution animation state
+        let saveProgress = currentProgress;
+        if (!showSolution) {
+            // Set the resolution as "ended" to display it full
+            currentProgress = shortestPath.length - 1;
+            redraw(true)
+        }
+
+        saveCanvasToPng(`LPS-${mazeId}-Resolved.png`);
+
+        if (!showSolution) {
+            // Restore the resolve animation
+            currentProgress = saveProgress;
+            redraw(); // To avoid flicker
+        }
     });
 
-    exportUnfinishedToPng.addEventListener('click', function(){
-        saveCanvasToPng('LPS-Unfinished.png');
+    exportUnfinishedToPng.addEventListener('click', function () {
+        saveCanvasToPng(`LPS-${mazeId}-Unfinished.png`);
     });
 
     // Default value 
     // (not radius or other, because they called the generation instead of directly setted values)
+    showSolution = inputShowSolution.checked;
+    isAsyncMode = (inputPreviewType.value === 'show-progress');
     generationAnimationSpeed = ANIMATION_SPEED[inputGenerationSpeed.value];
     resolveAnimationSpeed = ANIMATION_SPEED[inputResolveSpeed.value];
 
@@ -200,23 +234,25 @@
 
         onGenerationStart();
 
+        mazeId++;
+
+        mazeResolved = false;
+        shortestPath = [];
+
         startingNode = null;
         endingNode = null;
         currentAnimationNode = null;
 
         radius = +inputRadius.value;
         innerRadius = radius * (inputInnerRadius.value / 100) | 0;
-        const areaOuter = Math.PI * radius**2;
-        const areaInner = Math.PI * innerRadius**2;
-        const density = inputPathsDensity.value / 100 ;
+        const areaOuter = Math.PI * radius ** 2;
+        const areaInner = Math.PI * innerRadius ** 2;
+        const density = inputPathsDensity.value / 100;
         nbExtraPaths = (areaOuter - areaInner) * density;
-        isAsyncMode = (inputPreviewType.value === 'show-progress');
 
         diameter = 2 * radius + 1;
 
         maze = new Array(diameter ** 2).fill(null);
-
-        shortestPath = [];
 
         const startingX = 0;
         const startingY = diameter / 2 | 0;
@@ -260,8 +296,8 @@
             currentAnimationNode = node;
             redrawIfNeeded();
             await waitNextFrame(generationAnimationSpeed);
-            
-            
+
+
             if (freeSpacesCoord.length === 0) {
 
                 history.pop();
@@ -310,6 +346,8 @@
             if (node) node.resetState();
         }
 
+        mazeResolved = true;
+
         onResolveEnd();
     }
 
@@ -323,6 +361,8 @@
         let duration = previousDrawTime;
 
         do {
+            if (!showSolution) return;
+            
             if (!isAsyncMode) {
                 currentProgress = totalProgress;
                 break;
@@ -330,7 +370,7 @@
 
 
             duration = Date.now() - previousDrawTime;
-        
+
             // ++ to avoid division by 0
             if (resolveAnimationSpeed == 0) resolveAnimationSpeed++;
 
@@ -340,7 +380,7 @@
 
             redrawIfNeeded();
             await waitNextFrame();
-            
+
         } while (currentProgress < totalProgress);
 
         redraw();
@@ -360,7 +400,7 @@
         nodeSize = canvasWidth / nbTiles | 0;
 
         canvasWidth = nodeSize * nbTiles;
-        
+
         canvas.width  = nodeSize * nbTiles;
         canvas.height = nodeSize * nbTiles;
 
@@ -385,7 +425,7 @@
         // -  Path
         for (let y = 0; y < diameter; y++) {
             for (let x = 0; x < diameter; x++) {
-                
+
                 const node = getNodeAt(x, y);
 
                 if (!node) continue;
@@ -400,18 +440,17 @@
         }
 
         // - Start and end
-        if (startingNode)  drawNode(startingNode);
-        if (endingNode)    drawNode(endingNode);
+        if (startingNode) drawNode(startingNode);
+        if (endingNode) drawNode(endingNode);
 
         // Draw the path resolution
-        if (withResolvedPath){
+        if (withResolvedPath) {
             drawPath();
         }
     }
 
     // Draw a node (with his path to the next node) at the correct coordinates in the canvas
-    function drawNode(node)
-    {
+    function drawNode(node) {
         const [pxX, pxY] = nodeCoordToPxCoordTopLeft(node.x, node.y);
 
         let marginX = 0;
@@ -436,7 +475,7 @@
 
             const targetPxX = pxX + relX * nodeSize;
             const targetPxY = pxY + relY * nodeSize;
-            
+
             ctx.fillRect(targetPxX, targetPxY, nodeSize, nodeSize);
         }
 
@@ -448,12 +487,11 @@
             ctx.fillStyle = COLOR_CURRENT_PROGRESS;
         }
 
-        ctx.fillRect(pxX - marginX, pxY - marginY, nodeSize + 2*marginX, nodeSize + 2*marginY);
+        ctx.fillRect(pxX - marginX, pxY - marginY, nodeSize + 2 * marginX, nodeSize + 2 * marginY);
     }
 
     // Draw the shortest path in the maze
-    function drawPath()
-    {
+    function drawPath() {
         ctx.strokeStyle = COLOR_RESOLVED_PATH;
         ctx.lineWidth = nodeSize;
 
@@ -472,7 +510,7 @@
             if (i >= currentProgress + 1) break;
 
             let [pxX, pxY] = nodeCoordToPxCoordCenter(node.x, node.y);
-            
+
             if (node === startingNode) {
                 ctx.moveTo(pxX, pxY);
             }
@@ -535,10 +573,10 @@
 
         if (x < 0 || x >= diameter || y < 0 || y >= diameter) return false;
 
-        if (Math.sqrt(x0**2 + y0**2) > radius + 1/3) return false;
+        if (Math.sqrt(x0 ** 2 + y0 ** 2) > radius + 1 / 3) return false;
 
-        if (Math.sqrt(x0**2 + y0**2) < innerRadius - 2/3) return false;
-        
+        if (Math.sqrt(x0 ** 2 + y0 ** 2) < innerRadius - 2 / 3) return false;
+
         const node = getNodeAt(x, y);
 
         return node === null;
@@ -554,7 +592,7 @@
     // Get a node from the maze at the specified coordinate,
     // or null if none is presents here
     function getNodeAt(x, y) {
-        
+
         if (x < 0 || x >= diameter) return null;
         if (y < 0 || y >= diameter) return null;
 
@@ -576,8 +614,8 @@
     // the pixel coordinate (top left corner of the node)
     function nodeCoordToPxCoordTopLeft(x, y) {
         return [
-            nodeSize * (2*x + 1),
-            nodeSize * (2*y + 1),
+            nodeSize * (2 * x + 1),
+            nodeSize * (2 * y + 1),
         ];
     }
 
@@ -586,8 +624,8 @@
     // the pixel coordinate (center of the node)
     function nodeCoordToPxCoordCenter(x, y) {
         return [
-            nodeSize * (2*x + 1) + nodeSize / 2,
-            nodeSize * (2*y + 1) + nodeSize / 2,
+            nodeSize * (2 * x + 1) + nodeSize / 2,
+            nodeSize * (2 * y + 1) + nodeSize / 2,
         ];
     }
 
@@ -607,11 +645,11 @@
         return array[Math.random() * array.length | 0];
     }
 
-    
+
     // Return a promise which is resolved the next frame (async mode only)
     async function waitNextFrame(animationSpeed = 0) {
         if (isAsyncMode) {
-            
+
             await new Promise((resolve, reject) => {
                 promiseReject = reject;
                 setTimeout(resolve, animationSpeed);
@@ -626,8 +664,7 @@
         return Promise.resolve();
     }
 
-    async function saveCanvasToPng(name = 'LPS-maze.png')
-    {
+    async function saveCanvasToPng(name = 'LPS-maze.png') {
         link.download = name;
         link.href = canvas.toDataURL();
         link.click();
@@ -664,20 +701,29 @@
         promiseReject = null;
     }
 
-    function onGenerationEnd()
-    {
+    function onGenerationEnd() {
         redrawIfNeeded();
         resolveMaze();
     }
 
-    function onResolveEnd()
-    {
-        exportButtonVisibility(true, false);
-        updateVisualProgress();
+    function onResolveEnd() {
+        showSolutionAnimationIfNeeded();
     }
 
-    function onResolveAnimationEnd()
-    {
+    function onResolveAnimationEnd() {
         exportButtonVisibility(true, true);
+    }
+
+    // start the resolve animation if enable and display export buttons for resolution
+    function showSolutionAnimationIfNeeded() {
+        if (!mazeResolved) {
+            exportButtonVisibility(false, false);
+        } else if (showSolution) {
+            exportButtonVisibility(true, false);
+            updateVisualProgress();
+        } else {
+            exportButtonVisibility(true, true);
+            redraw(false);
+        }
     }
 })();
