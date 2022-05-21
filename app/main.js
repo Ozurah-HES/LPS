@@ -291,10 +291,14 @@
                 }
             }
 
-            // Place here insted after check "freeSpaceCoord" length, to see the "history" deplacement
-            currentGenAnimationNode = node;
-            redrawIfNeeded();
-            await waitNextFrame(generationAnimationSpeed);
+            // Animation is placed here insted after check "freeSpaceCoord" length, to see the "history" deplacement
+            if (generationAnimationSpeed > 0 || 
+                (generationAnimationSpeed === 0 && freeSpacesCoord.length > 0)
+            ) { // Checking anim. speed because we don't display the history movement at speed 0
+                currentGenAnimationNode = node;
+                redrawIfNeeded();
+                await waitNextFrame(generationAnimationSpeed);
+            }
 
 
             if (freeSpacesCoord.length === 0) {
@@ -660,10 +664,12 @@
     async function waitNextFrame(animationSpeed = 0) {
         if (isAsyncMode) {
 
-            await new Promise((resolve, reject) => {
-                promiseReject = reject;
-                setTimeout(resolve, animationSpeed);
-            });
+            if (animationSpeed > 0) {
+                await new Promise((resolve, reject) => {
+                    promiseReject = reject;
+                    setTimeout(resolve, animationSpeed);
+                });
+            }
 
             return new Promise((resolve, reject) => {
                 promiseReject = reject;
