@@ -122,7 +122,7 @@
     let animFrameId = 0;
     let generationAnimationSpeed = 0;
     let resolveAnimationSpeed = 0;
-    let currentAnimationNode = null; // Used for the coloration when generating the maze
+    let currentGenAnimationNode = null; // Used for the coloration when generating the maze
     let currentProgress = 0;
     let showSolution = false;
 
@@ -240,7 +240,7 @@
 
         startingNode = null;
         endingNode = null;
-        currentAnimationNode = null;
+        currentGenAnimationNode = null;
 
         radius = +inputRadius.value;
         innerRadius = radius * (inputInnerRadius.value / 100) | 0;
@@ -291,8 +291,8 @@
                 }
             }
 
-
-            currentAnimationNode = node;
+            // Place here insted after check "freeSpaceCoord" length, to see the "history" deplacement
+            currentGenAnimationNode = node;
             redrawIfNeeded();
             await waitNextFrame(generationAnimationSpeed);
 
@@ -308,15 +308,11 @@
 
             node.addEdge(dir, newNode);
             history.push(newNode);
-
-            currentAnimationNode = newNode;
-            redrawIfNeeded();
-            await waitNextFrame();
         }
 
         await addRandomExtraPaths(nbExtraPaths);
 
-        currentAnimationNode = null;
+        currentGenAnimationNode = null;
 
         startingNode = getNodeAt(startingX, startingY);
         endingNode = getNodeAt(endingX, endingY);
@@ -482,7 +478,7 @@
             ctx.fillStyle = COLOR_START;
         } else if (node === endingNode) {
             ctx.fillStyle = COLOR_END;
-        } else if (node == currentAnimationNode && generationAnimationSpeed > 0) { // Checking anim. speed to avoid useless flickering
+        } else if (node == currentGenAnimationNode && generationAnimationSpeed > 0) { // Checking anim. speed to avoid useless flickering
             ctx.fillStyle = COLOR_CURRENT_PROGRESS;
         }
 
@@ -559,7 +555,7 @@
                 // To avoid infinity loop, we update the list without the node which have all nighs connected
                 allNodes = maze.filter(node => node !== null && node.nighs.some(nigh => nigh === null));
 
-                currentAnimationNode = node;
+                currentGenAnimationNode = node;
                 nbExtraPaths--;
 
                 redrawIfNeeded();
