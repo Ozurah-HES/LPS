@@ -31,7 +31,8 @@
     ];
 
     // Animation speed (delay between each frames (0 is the normal frame rate))
-    const ANIMATION_SPEED = [0, 50, 100, 150, 200, 250, 500, 750, 1000];
+    const ANIMATION_SPEED = [1000, 750, 500, 250, 200, 150, 100, 50, 0];
+    
 
     class Node {
 
