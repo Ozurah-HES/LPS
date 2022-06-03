@@ -113,6 +113,7 @@
     let nbExtraPaths = 0;
     let startingNode = null;
     let endingNode = null;
+    let genPathTraveled = 0;
 
     let mazeResolved = false;
 
@@ -150,6 +151,8 @@
     const inputPreviewType = document.getElementById('input-preview-type');
     const inputGenerationSpeed = document.getElementById('input-generation-speed');
     const inputResolveSpeed = document.getElementById('input-resolve-speed');
+    const labelGenTraveledDist = document.getElementById('path-length-traveled');
+    const labelShortestDist = document.getElementById('shortest-resolve-distance');
 
     // - Export
     const link = document.getElementById('link');
@@ -242,6 +245,7 @@
         startingNode = null;
         endingNode = null;
         currentGenAnimationNode = null;
+        genPathTraveled = 0;
 
         radius = +inputRadius.value;
         innerRadius = radius * (inputInnerRadius.value / 100) | 0;
@@ -292,13 +296,17 @@
                 }
             }
 
+            genPathTraveled++;
             // Animation is placed here insted after check "freeSpaceCoord" length, to see the "history" deplacement
             if (generationAnimationSpeed > 0 || 
                 (generationAnimationSpeed === 0 && freeSpacesCoord.length > 0)
             ) { // Checking anim. speed because we don't display the history movement at speed 0
                 currentGenAnimationNode = node;
                 redrawIfNeeded();
-                await waitNextFrame(generationAnimationSpeed);
+                if (isAsyncMode) {
+                    labelGenTraveledDist.innerText = genPathTraveled;
+                    await waitNextFrame(generationAnimationSpeed);
+                }
             }
 
 
@@ -720,10 +728,12 @@
 
     function onGenerationEnd() {
         redrawIfNeeded();
+        labelGenTraveledDist.innerText = genPathTraveled;
         resolveMaze();
     }
 
     function onResolveEnd() {
+        labelShortestDist.innerText = shortestPath.length - 1 - 1; // 2nd -1 is to exclude the start node
         showSolutionAnimationIfNeeded();
     }
 
