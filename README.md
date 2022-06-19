@@ -1,3 +1,5 @@
+**Fiche descriptive du projet**
+
 # Introduction
 
 Le projet choisi pour le cours d'algorithme concerne les labyrinthes.
