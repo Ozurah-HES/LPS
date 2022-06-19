@@ -49,7 +49,7 @@ Cette recherche en profondeur a quelques variantes :
 
 Le point de départ de la résolution du labyrinthe est situé tout à gauche, il n'est donc pas obligé le même que le point de départ utilisé lors de la génération.
 
-Visuellement, un chemin rouge représente le tracé du chemin le plus court. Lors de la progression de celle-ci, une interpolation est faite entre deux noeuds
+Visuellement, un chemin rouge représente le tracé du chemin le plus court. Lors de la progression de celle-ci, une interpolation est faite entre deux nœuds
 pour rendre la progression fluide.
 
 # Page web
@@ -98,7 +98,7 @@ Nous avons dû réfléchir à la manière de représenter une génération et un
 
 # Résultats
 
-Lorsque de la génération passe exactement par `2 * (nombre de noeuds) - 1` cases, cela est dû au fait que chaque noeud est exploré une foix lors de la génération, puis une autre fois lors du "backtrack", à l'exception du noeud le plus "loin" du point de départ (d'où le `- 1`).
+Lorsque de la génération passe exactement par `2 * (nombre de nœuds) - 1` cases, cela est dû au fait que chaque nœud est exploré une foix lors de la génération, puis une autre fois lors du "backtrack", à l'exception du nœud le plus "loin" du point de départ (d'où le `- 1`).
 
 Plus le nombre de chemins supplémentaires est élevé, plus le chemin le plus court sera visuellement directe (ligne allant de gauche à droite si le labyrinthe n'a pas la forme d'un donut), alors que dans le cas où le nombre de chemins supplémentaires est à zéro, le chemin le plus cours va généralement faire plein d'allers-retours.
 
@@ -122,7 +122,7 @@ Exportation d'une image PNG (labyrinthe résolu) :
 
 # Conclusion
 
-Le labyrinthe est représenté par un graph composé de noeuds, ces noeuds sont également accessibles via une grille.
+Le labyrinthe est représenté par un graph composé de nœuds, ces nœuds sont également accessibles via une grille.
 
 La génération utilise une pile pour l'exploration et le "backtrack", alors que la résolution utilise une file pour effectuer une recherche en largeur.
 
