@@ -92,6 +92,16 @@ Partie exportation :
 * Génération du labyrinthe : représenté par un carré violet ;
 * Résolution du labyrinthe : représenté par une jauge rouge ;
 
+# Difficultés rencontrées
+
+Nous avons dû réfléchir à la manière de représenter une génération et une résolution "non instantannée", pour cela, nous avons utilisé les mots-clés `async` et `await` en JavaScript avec des `Promise`, cela permet d'avoir une attente en plein millieu du code sans geler l'interface utilisateur, il a fallu prendre en compte les cas où l'utilisateur modifie une entrée durant la génération ou durant la résolution, tel qu'interrompre l'action en cours.
+
+# Résultats
+
+Lorsque de la génération passe exactement par `2 * (nombre de noeuds) - 1` cases, cela est dû au fait que chaque noeud est exploré une foix lors de la génération, puis une autre fois lors du "backtrack", à l'exception du noeud le plus "loin" du point de départ (d'où le `- 1`).
+
+Plus le nombre de chemins supplémentaires est élevé, plus le chemin le plus court sera visuellement directe (ligne allant de gauche à droite si le labyrinthe n'a pas la forme d'un donut), alors que dans le cas où le nombre de chemins supplémentaires est à zéro, le chemin le plus cours va généralement faire plein d'allers-retours.
+
 ## Captures d'écran
 
 Génération du labyrinthe :
@@ -110,9 +120,14 @@ Exportation d'une image PNG (labyrinthe résolu) :
 
 ![image-1.png](./misc/export-resolved.png)
 
-# Résultats
+# Conclusion
 
-Lorsque de la génération passe exactement par `2 * (nombre de noeuds) - 1` cases, cela est dû au fait que chaque noeud est exploré une foix lors de la génération, puis une autre fois lors du "backtrack", à l'exception du noeud le plus "loin" du point de départ (d'où le `- 1`).
+Le labyrinthe est représenté par un graph composé de noeuds, ces noeuds sont également accessibles via une grille.
 
-Plus le nombre de chemins supplémentaire est élevé, plus le chemin le plus court sera visuellement directe (ligne allant de gauche à droite si le labyrinthe n'a pas la forme d'un donut), alors que dans le cas où le nombre de chemins supplémentaires est à zéro, le chemin le plus cours va généralement faire plein d'allers-retours.
+La génération utilise une pile pour l'exploration et le "backtrack", alors que la résolution utilise une file pour effectuer une recherche en largeur.
 
+Il est possible de générer un labyrinthe de taille variable en forme de cercle ou de donut, et il est également possible de choisir la vitesse de génération et de résolution.
+
+La génération et la résolution du labyrinthe ce fait de manière asynchrone.
+
+Un nombre plus élevé de chemins supplémentaires donnera un chemin plus court pour la résolution.
