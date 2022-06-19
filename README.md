@@ -10,8 +10,8 @@ Un labyrinthe est caractérisé par une seule et unique entrée, de même pour l
 
 Le labyrinthe est réalisé en deux étapes :
 
-- Génération du labyrinthe en lui-même
-- Résolution du labyrinthe en passant par le chemin le plus court
+* Génération du labyrinthe en lui-même ;
+* Résolution du labyrinthe en passant par le chemin le plus court.
 
 Le labyrinthe généré prend la forme d'un cercle ou d'un donut.
 
@@ -29,8 +29,8 @@ Les nœuds sont également disposés dans une grille, il est ainsi possible d'ac
 
 Les algorithmes employés sont les suivants :
 
--  Pour la génération, l'algorithme de [recherche en profondeur](https://en.wikipedia.org/wiki/Maze_generation_algorithm#Randomized_depth-first_search), également nommé "retour-récursif"
--  Pour la résolution du labyrinthe, l'algorithme de recherche en largeur est utilisé
+* Pour la génération, l'algorithme de [recherche en profondeur](https://en.wikipedia.org/wiki/Maze_generation_algorithm#Randomized_depth-first_search), également nommé "retour-récursif" ;
+* Pour la résolution du labyrinthe, l'algorithme de recherche en largeur est utilisé.
 
 # Génération du labyrinthe
 
@@ -68,20 +68,20 @@ Partie génération :
 * Densité des chemins : permet d'ajouter des chemins alternatifs pour la résolution, si le slider est tout à gauche, un chemin sera possible pour atteindre la sortie du labyrinthe ;
 * Générer un autre labyrinthe avec la même configuration ;
 * Distance parcouru par le carré violet lors de la génération ;
-* Solution la plus courte : distance parcouru par la jauge rouge ;
+* Solution la plus courte : distance parcouru par la jauge rouge.
 
 Partie résolution :
 
 * Montrer la solution : affiche un tracé passant par le chemin le plus cours pour résoudre le labyrinthe ;
 * Type de preview : choix entre afficher la progression de la génération et résolution, ou entre afficher le tout instantanément ;
 * Vitesse de génération : si le slider est tout à gauche, la partie "backtrack" de la génération et le carré violet ne seront pas représentés ;
-* Vitesse de résolution
+* Vitesse de résolution.
 
 Partie exportation :
 
 * Exporter une image PNG du labyrinthe dans son état actuel (bouton visible lorsque la génération est en cours) ;
 * Exporter une image PNG du labyrinthe sans sa résolution (bouton visible lorsque la génération est terminée) ;
-* Exporter une image PNG du labyrinthe comprenant sa résolution (bouton visible lors la génération est terminée et que la résolution n'est pas en cours) ;
+* Exporter une image PNG du labyrinthe comprenant sa résolution (bouton visible lors la génération est terminée et que la résolution n'est pas en cours).
 
 ## Partie labyrinthe visuel
 
@@ -90,7 +90,7 @@ Partie exportation :
 * Départ du labyrinthe (utilisé pour la résolution) en bleu clair ;
 * Arrivé du labyrinthe (utilisé pour la résolution) en vert clair ;
 * Génération du labyrinthe : représenté par un carré violet ;
-* Résolution du labyrinthe : représenté par une jauge rouge ;
+* Résolution du labyrinthe : représenté par une jauge rouge.
 
 # Difficultés rencontrées
 
