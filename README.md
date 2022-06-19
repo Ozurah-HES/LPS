@@ -141,5 +141,7 @@ Voici un labyrinthe de taille maximale avec 1 seul chemin possible. Parviendrez-
 
 <details> 
   <summary>Vous abandonnez ? La solution ce trouve ici !</summary>
-   ![image.png](./misc/LPS-max-Resolved.png)
+  
+  ![image.png](./misc/LPS-max-Resolved.png)   
 </details>
+
