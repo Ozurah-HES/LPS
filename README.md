@@ -130,3 +130,14 @@ Il est possible de générer un labyrinthe de taille variable en forme de cercle
 La génération et la résolution du labyrinthe se font de manière asynchrone.
 
 Un nombre plus élevé de chemins supplémentaires donnera un chemin plus court pour la résolution.
+
+# Challenge
+
+Voici un labyrinthe de taille maximale avec 1 seul chemin possible. Parviendrez-vous à le résoudre ?
+
+![image.png](./misc/LPS-max-Unresolved.png)
+
+<details> 
+  <summary>Vous abandonnez ? La solution ce trouve ici !</summary>
+   ![image.png](./misc/LPS-max-Resolved.png)
+</details>
